@@ -1,4 +1,4 @@
-module Conway (grid, grids, update) where
+module Conway (Grid, grid, grids, update) where
 
 import Data.Array.IArray
 import Data.Array.Unboxed
