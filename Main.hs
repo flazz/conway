@@ -4,53 +4,79 @@ import Graphics.Rendering.OpenGL
 import qualified Graphics.UI.GLUT as GLUT
 import Data.IORef
 import Data.Array.IArray
+
 import Conway
-
-black = Color4 0 0 0 1 :: Color4 GLclampf
-white = Color4 1 1 1 1 :: Color4 GLclampf
-
-base03 = Color4 0 (43/255)  (54/255) 1 :: Color4 GLclampf
-base02 = Color4 (7/255) (54/255) (66/255) 1 :: Color4 GLclampf
-magenta = Color4 (211/255) (54/255) (130/255) 1 :: Color4 GLclampf
-violet = Color4 (108/255) (113/255) (196/255) 1 :: Color4 GLclampf
-blue = Color4 (38/255) (139/255) (210/255) 1 :: Color4 GLclampf
-green = Color4 (133/255) (153/255) (0/255) 1 :: Color4 GLclampf
+import Colors
 
 period delay action = do
   action
   GLUT.addTimerCallback delay $ period delay action
 
+data State = Run Grid | Modify Grid GridIx
+
+update (Run g) = Run $ updateGrid g
+update s = s
+
+hBlinker (x,y) = [ ((x-1,y),True)
+                 , ((x,y),True)
+                 , ((x+1,y),True)
+                 ]
+
+vBlinker (x,y) = [ ((x,y-1),True)
+                 , ((x,y),True)
+                 , ((x,y+1),True)
+                 ]
+
 main :: IO ()
 main = do
+  GLUT.initialWindowSize $= Size 800 800
   GLUT.initialDisplayMode $= [ GLUT.DoubleBuffered , GLUT.RGBAMode ]
   (_progname, _args) <- GLUT.getArgsAndInitialize
+  GLUT.createWindow "conway"
 
-  let activeCells = [ ((3,3),True)
-                    , ((4,3),True)
-                    , ((5,3),True)
+  let dieHard = [ ((20,22),True)
+                , ((21,21),True)
+                , ((21,22),True)
+                , ((25,21),True)
+                , ((26,21),True)
+                , ((27,21),True)
+                , ((26,23),True)
+                ]
 
-                    , ((6,6),True)
+  let  fPentomino = [ ((6,6),True)
                     , ((6,7),True)
                     , ((7,6),True)
                     , ((7,7),True)
-
                     , ((8,8),True)
                     , ((8,9),True)
                     , ((9,8),True)
                     , ((9,9),True)
+                    , ((10,12),True)
+                    , ((11,11),True)
+                    , ((11,12),True)
+                    , ((11,13),True)
+                    , ((14,13),True)
                     ]
 
-  let g = grid (20,20) // activeCells
 
-  gridRef <- newIORef g
-  GLUT.createWindow "conway"
-  GLUT.displayCallback $= display gridRef
+  let activeCells =  concat [ hBlinker (4,8)
+                            , hBlinker (12,8)
+                            , vBlinker (8,4)
+                            , vBlinker (8,12)
+                            ]
+
+  let g = grid (15,15) // activeCells
+
+  stateRef <- newIORef (Run g)
+
+  GLUT.displayCallback $= display stateRef
+  {-GLUT.keyboardMouseCallback $= Just (handleInput gameRef)-}
 
   blend $= Enabled
   blendFunc $= (SrcAlpha, OneMinusSrcAlpha)
 
-  period 150 $ do
-    modifyIORef gridRef update
+  period 60 $ do
+    modifyIORef stateRef update
     GLUT.postRedisplay Nothing
 
   clearColor $= base03
@@ -83,31 +109,34 @@ vLine h x = do
     vertex v1
     vertex v2
 
-display :: IORef Grid -> IO ()
-display gridRef = do
+display :: IORef State -> IO ()
+display stateRef = do
   clear [ColorBuffer]
-  g <- readIORef gridRef
+  st <- readIORef stateRef
+  case st of
+    Run g ->
+      preservingMatrix $ do
+        let (cols, rows) = size g
+        let width = fromIntegral cols
+        let height = fromIntegral rows
 
-  preservingMatrix $ do
-    let (cols, rows) = size g
-    let width = fromIntegral cols
-    let height = fromIntegral rows
+        -- zoom out
+        let sX = 2 / width :: GLfloat
+        let sY = 2 / height :: GLfloat
+        scale sX sY 0
 
-    -- zoom out
-    let sX = 2 / width :: GLfloat
-    let sY = 2 / height :: GLfloat
-    scale sX sY 0
+        -- move to the center
+        let origin = Vector3 (width/(-2) - 1) (height/(-2) - 1) 0 :: Vector3 GLfloat
+        translate origin
 
-    -- move to the center
-    let origin = Vector3 (width/(-2) - 1) (height/(-2) - 1) 0 :: Vector3 GLfloat
-    translate origin
+        color green
+        let activeCell (_, state) = state
+        mapM_ drawCell . filter activeCell . assocs $ g
 
-    color green
-    let activeCell (_, state) = state
-    mapM_ drawCell . filter activeCell . assocs $ g
+        color base02
+        mapM_ ( hLine $ width + 1 ) [1..height]
+        mapM_ ( vLine $ height + 1 ) [1..width]
 
-    color base02
-    mapM_ ( hLine $ width + 1 ) [1..height]
-    mapM_ ( vLine $ height + 1 ) [1..width]
+    otherwise -> return ()
 
   GLUT.swapBuffers

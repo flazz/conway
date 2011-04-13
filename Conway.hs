@@ -1,4 +1,4 @@
-module Conway (Grid, GridIx, grid, size, grids, update) where
+module Conway (Grid, GridIx, grid, size, grids, updateGrid) where
 
 import Data.Array.IArray
 import Data.Array.Unboxed
@@ -19,7 +19,7 @@ grids g = g:gs
   where gs = unfoldr nextGrid g
         nextGrid g | g == g' = Nothing
                    | otherwise = Just (g,g')
-          where g' = update g
+          where g' = updateGrid g
 
 size :: Grid -> (Int, Int)
 size g = (cols,rows)
@@ -44,8 +44,8 @@ neighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
         ys = map (+ y) base
 
 
-update :: Grid -> Grid
-update g = g // newAssocs
+updateGrid :: Grid -> Grid
+updateGrid g = g // newAssocs
   where uc = updateCell g
         ixs = indices g
         newAssocs = zip ixs (map uc ixs)
