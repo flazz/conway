@@ -1,4 +1,4 @@
-module Conway (Grid, grid, grids, update) where
+module Conway (Grid, GridIx, grid, grids, update) where
 
 import Data.Array.IArray
 import Data.Array.Unboxed
@@ -21,6 +21,13 @@ grids g = g:gs
                    | otherwise = Just (g,g')
           where g' = update g
 
+-- | Determines the new state based on the number of living neighbors
+rules :: Bool -> Int -> Bool
+rules True 2 = True
+rules True 3 = True
+rules False 3 = True
+rules _ _ = False
+
 -- | Return a list of states about the given index
 neighborhood :: Grid -> GridIx -> [Bool]
 neighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
@@ -28,17 +35,10 @@ neighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
                           , nx /= ix
                           , inRange (bounds g) nx
                           ]
-
   where base = [-1, 0, 1]
         xs = map (+ x) base
         ys = map (+ y) base
 
--- | Determines the new state based on the number of living neighbors
-rules :: Bool -> Int -> Bool
-rules True 2 = True
-rules True 3 = True
-rules False 3 = True
-rules _ _ = False
 
 update :: Grid -> Grid
 update g = g // newAssocs
