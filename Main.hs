@@ -6,15 +6,15 @@ import Data.IORef
 import Data.Array.IArray
 import Conway
 
+black = Color4 0 0 0 1 :: Color4 GLclampf
+white = Color4 1 1 1 1 :: Color4 GLclampf
+
 base03 = Color4 0 (43/255)  (54/255) 1 :: Color4 GLclampf
 base02 = Color4 (7/255) (54/255) (66/255) 1 :: Color4 GLclampf
 magenta = Color4 (211/255) (54/255) (130/255) 1 :: Color4 GLclampf
 violet = Color4 (108/255) (113/255) (196/255) 1 :: Color4 GLclampf
 blue = Color4 (38/255) (139/255) (210/255) 1 :: Color4 GLclampf
 green = Color4 (133/255) (153/255) (0/255) 1 :: Color4 GLclampf
-
-black = Color4 0 0 0 1 :: Color4 GLclampf
-white = Color4 1 1 1 1 :: Color4 GLclampf
 
 period delay action = do
   action
@@ -25,12 +25,22 @@ main = do
   GLUT.initialDisplayMode $= [ GLUT.DoubleBuffered , GLUT.RGBAMode ]
   (_progname, _args) <- GLUT.getArgsAndInitialize
 
-  let liveCells = [ ((3,3),True)
-                  , ((4,3),True)
-                  , ((5,3),True)
-                  ]
+  let activeCells = [ ((3,3),True)
+                    , ((4,3),True)
+                    , ((5,3),True)
 
-  let g = (grid (20,20)) // liveCells
+                    , ((6,6),True)
+                    , ((6,7),True)
+                    , ((7,6),True)
+                    , ((7,7),True)
+
+                    , ((8,8),True)
+                    , ((8,9),True)
+                    , ((9,8),True)
+                    , ((9,9),True)
+                    ]
+
+  let g = grid (20,20) // activeCells
 
   gridRef <- newIORef g
   GLUT.createWindow "conway"
