@@ -1,4 +1,4 @@
-module Conway (Grid, GridIx, grid, grids, update) where
+module Conway (Grid, GridIx, grid, size, grids, update) where
 
 import Data.Array.IArray
 import Data.Array.Unboxed
@@ -20,6 +20,10 @@ grids g = g:gs
         nextGrid g | g == g' = Nothing
                    | otherwise = Just (g,g')
           where g' = update g
+
+size :: Grid -> (Int, Int)
+size g = (cols,rows)
+  where (_, (cols,rows)) = bounds g
 
 -- | Determines the new state based on the number of living neighbors
 rules :: Bool -> Int -> Bool
