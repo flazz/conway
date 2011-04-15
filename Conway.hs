@@ -33,8 +33,31 @@ rules False 3 = True
 rules _ _ = False
 
 -- | Return a list of states about the given index
-neighborhood :: Grid -> GridIx -> [Bool]
-neighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
+neighborhood = torroidNeighborhood
+
+torroidNeighborhood :: Grid -> GridIx -> [Bool]
+torroidNeighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
+                          , let nx = (a,b)
+                          , nx /= ix
+                          , inRange (bounds g) nx
+                          ]
+  where base = [-1, 0, 1]
+        ((lx,ly),(hx,hy)) =  bounds g
+
+        wrap l h n =
+          if n == (l - 1)
+            then h
+            else if n == (h + 1)
+              then l
+              else n
+
+        fX = wrap lx hx . (+ x)
+        fY = wrap ly hy . (+ y)
+        xs = map fX base
+        ys = map fY base
+
+euclidianNeighborhood :: Grid -> GridIx -> [Bool]
+euclidianNeighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
                           , let nx = (a,b)
                           , nx /= ix
                           , inRange (bounds g) nx
@@ -42,7 +65,6 @@ neighborhood g ix@(x,y) = [ g ! nx | a <- xs , b <- ys
   where base = [-1, 0, 1]
         xs = map (+ x) base
         ys = map (+ y) base
-
 
 updateGrid :: Grid -> Grid
 updateGrid g = g // newAssocs

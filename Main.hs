@@ -27,6 +27,37 @@ vBlinker (x,y) = [ ((x,y-1),True)
                  , ((x,y+1),True)
                  ]
 
+glider (x,y) = [ ((x,y+1), True)
+               , ((x,y-1), True)
+               , ((x+1,y), True)
+               , ((x-1,y-1), True)
+               , ((x+1,y-1), True)
+               ]
+
+dieHard = [ ((10,22),True)
+          , ((11,21),True)
+          , ((11,22),True)
+          , ((15,21),True)
+          , ((16,21),True)
+          , ((17,21),True)
+          , ((16,23),True)
+          ]
+
+fPentomino = [ ((6,6),True)
+             , ((6,7),True)
+             , ((7,6),True)
+             , ((7,7),True)
+             , ((8,8),True)
+             , ((8,9),True)
+             , ((9,8),True)
+             , ((9,9),True)
+             , ((10,12),True)
+             , ((11,11),True)
+             , ((11,12),True)
+             , ((11,13),True)
+             , ((14,13),True)
+             ]
+
 main :: IO ()
 main = do
   GLUT.initialWindowSize $= Size 800 800
@@ -34,38 +65,11 @@ main = do
   (_progname, _args) <- GLUT.getArgsAndInitialize
   GLUT.createWindow "conway"
 
-  let dieHard = [ ((20,22),True)
-                , ((21,21),True)
-                , ((21,22),True)
-                , ((25,21),True)
-                , ((26,21),True)
-                , ((27,21),True)
-                , ((26,23),True)
-                ]
 
-  let  fPentomino = [ ((6,6),True)
-                    , ((6,7),True)
-                    , ((7,6),True)
-                    , ((7,7),True)
-                    , ((8,8),True)
-                    , ((8,9),True)
-                    , ((9,8),True)
-                    , ((9,9),True)
-                    , ((10,12),True)
-                    , ((11,11),True)
-                    , ((11,12),True)
-                    , ((11,13),True)
-                    , ((14,13),True)
-                    ]
+  let activeCells = glider (8,8)
+  --let activeCells = dieHard
 
-
-  let activeCells =  concat [ hBlinker (4,8)
-                            , hBlinker (12,8)
-                            , vBlinker (8,4)
-                            , vBlinker (8,12)
-                            ]
-
-  let g = grid (15,15) // activeCells
+  let g = grid (0xf, 0xf) // activeCells
 
   stateRef <- newIORef (Run g)
 
@@ -75,7 +79,7 @@ main = do
   blend $= Enabled
   blendFunc $= (SrcAlpha, OneMinusSrcAlpha)
 
-  period 60 $ do
+  period 30 $ do
     modifyIORef stateRef update
     GLUT.postRedisplay Nothing
 
