@@ -64,6 +64,27 @@ display stateRef = do
         mapM_ ( hLine $ width + 1 ) [1..height]
         mapM_ ( vLine $ height + 1 ) [1..width]
 
-    otherwise -> return ()
+    Modify g ->
+      preservingMatrix $ do
+        let (cols, rows) = size g
+        let width = fromIntegral cols
+        let height = fromIntegral rows
+
+        -- zoom out
+        let sX = 2 / width :: GLfloat
+        let sY = 2 / height :: GLfloat
+        scale sX sY 0
+
+        -- move to the center
+        let origin = Vector3 (width/(-2) - 1) (height/(-2) - 1) 0 :: Vector3 GLfloat
+        translate origin
+
+        color magenta
+        let activeCell (_, state) = state
+        mapM_ drawCell . filter activeCell . assocs $ g
+
+        color base02
+        mapM_ ( hLine $ width + 1 ) [1..height]
+        mapM_ ( vLine $ height + 1 ) [1..width]
 
   swapBuffers
