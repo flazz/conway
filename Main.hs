@@ -21,15 +21,20 @@ update s = s
 
 main :: IO ()
 main = do
-  GLUT.initialWindowSize $= Size 800 800
+  GLUT.initialWindowSize $= Size 200 200
   GLUT.initialDisplayMode $= [ GLUT.DoubleBuffered , GLUT.RGBAMode ]
   (_progname, _args) <- GLUT.getArgsAndInitialize
   GLUT.createWindow "conway"
-  let activeCells = glider (8,8)
-  let g = grid (0xf, 0xf) // activeCells
+
+  {-let activeCells = glider (8,8)-}
+  {-let g = grid (0xf, 0xf) // activeCells-}
+
+  let g = grid (0x2, 0x2)
+
   stateRef <- newIORef (Run g)
   GLUT.displayCallback $= display stateRef
   GLUT.keyboardMouseCallback $= Just (handleInput stateRef)
+  GLUT.passiveMotionCallback $= Just (handleMovement stateRef)
 
   setup
 
